@@ -1,0 +1,51 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build outputs
+dist/
+build/
+*.local
+
+# Environment
+.env
+.env.local
+.env.production
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+ai-cad-studio.log
+ai-cad-studio.pid
+
+# Generated files
+generated/
+app/viewer/generated/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+
+# CAD outputs
+*.step
+*.stp
+*.stl
+*.glb
+skills/*/output/
+
+# Temporary
+tmp/
+temp/
