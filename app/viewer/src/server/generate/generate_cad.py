@@ -843,6 +843,29 @@ def handle_request(request: dict) -> dict:
     if exec_result.get("previewUrl"):
         result["previewUrl"] = exec_result["previewUrl"]
         result["previewName"] = exec_result.get("previewName", "")
+    
+    # Add documentation links for AGV skill
+    if skill == "agv":
+        result["docs"] = [
+            {
+                "name": "SolidWorks 导入验证指南",
+                "path": "/docs/SolidWorks_导入验证指南.docx",
+                "type": "docx",
+                "description": "详细的 SolidWorks 导入步骤和验证方法"
+            },
+            {
+                "name": "AGV 用户使用手册",
+                "path": "/docs/AGV_User_Manual.html",
+                "type": "html",
+                "description": "平台功能介绍和参数说明"
+            },
+            {
+                "name": "AGV 测试提示词",
+                "path": "/docs/agv_test_prompts.md",
+                "type": "md",
+                "description": "8 个经过验证的测试提示词"
+            }
+        ]
     return result
 
 
