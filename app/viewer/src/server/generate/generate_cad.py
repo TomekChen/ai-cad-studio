@@ -127,15 +127,22 @@ SKILL_PROFILES = {
     "agv": {
         "mode": "python", "ext": "step", "entry": "gen_step",
         "runner": (
-            "import os, sys, json, traceback\n"
-            "# AGV template-based generation\n"
-            "_params = {}\n"
+            "import os, sys, traceback\n"
+            "# Force AGV template usage - no free-form modeling allowed\n"
+            "_template_dir = os.path.join(os.path.dirname(os.path.abspath('__file__')), 'app', 'skills', 'agv', 'scripts')\n"
+            "if _template_dir not in sys.path:\n"
+            "    sys.path.insert(0, _template_dir)\n"
             "try:\n"
-            "    _step = gen_step(_params)\n"
+            "    from agv_chassis import build_agv_chassis\n"
+            "    import cadquery as cq\n"
+            "    _params = _params if '_params' in dir() else {}\n"
+            "    model = build_agv_chassis(**_params)\n"
+            "    _step_path = os.path.join(output_dir, 'output.step')\n"
+            "    cq.exporters.export(model, _step_path)\n"
+            "    print('OK' if os.path.exists(_step_path) else 'NO_OUTPUT')\n"
             "except Exception as _e:\n"
-            "    print('GEN_STEP_ERROR: ' + str(_e))\n"
+            "    print('TEMPLATE_ERROR: ' + str(_e))\n"
             "    traceback.print_exc()\n"
-            "print('OK' if _step and os.path.exists(_step) else 'NO_OUTPUT')\n"
         ),
     },
 }

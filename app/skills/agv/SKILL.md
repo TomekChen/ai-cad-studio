@@ -9,9 +9,72 @@ description: AGV底盘参数化建模 (CadQuery)，从自然语言需求生成AG
 
 从自然语言需求创建 AGV（自动导引车）底盘参数化 CAD 模型，生成经过验证的 STEP 工件，可直接导入 SolidWorks 进行物理仿真和干涉检测。
 
-## 使用场景
+## ⚠️ 强制约束（必须遵守）
 
-适用场景包括用户请求 AGV 底盘、移动机器人底盘、四轮驱动平台、仓储物流车底盘等。用户可以用自然语言描述尺寸、承载能力、轮距等参数。
+**禁止自由建模**：你必须使用预定义的 `agv_chassis.py` 模板，只提取参数填入模板。
+
+**错误做法** ：
+```python
+def gen_step(params=None):
+    chassis = cq.Workplane("XY").box(...)  # 不要自己写建模逻辑！
+```
+
+**正确做法** ✅：
+```python
+def gen_step(params=None):
+    import sys, os
+    # 添加模板路径
+    _template_dir = os.path.join(os.path.dirname(__file__), '..', '..', '..', 'skills', 'agv', 'scripts')
+    if _template_dir not in sys.path:
+        sys.path.insert(0, _template_dir)
+    from agv_chassis import build_agv_chassis
+    import cadquery as cq
+    
+    # 只提取参数，不要写建模逻辑
+    _params = {
+        "chassis_length": 600,
+        "chassis_width": 300,
+        "plate_thickness": 8,
+        "rail_width": 60,
+        "rail_height": 120,
+        "rail_thickness": 5,
+        "cross_count": 3,
+        "cross_width": 40,
+        "cross_height": 60,
+        "wheel_radius": 100,
+        "wheel_base": 450,
+        "wheel_track": 240,
+        "axle_diameter": 20,
+        "battery_length": 200,
+        "battery_width": 150,
+        "battery_height": 80,
+        "battery_offset_x": 0,
+        "motor_mount_width": 60,
+        "motor_mount_height": 50,
+        "motor_bolt_diameter": 8,
+        "mount_hole_diameter": 10,
+        "mount_hole_count_x": 4,
+        "mount_hole_count_y": 3,
+        "plate_fillet": 5,
+    }
+    
+    model = build_agv_chassis(**_params)
+    output_dir = '/workspace/root/projects/ai-cad-studio/app/viewer/generated'
+    os.makedirs(output_dir, exist_ok=True)
+    step_path = os.path.join(output_dir, 'output.step')
+    cq.exporters.export(model, step_path)
+    return step_path
+```
+
+## 参数提取规则
+
+- 用户说"0.6 米长" → `chassis_length: 600`
+- 用户说"承载 50 公斤" → 轻载，用默认板厚 8mm
+- 用户说"承载 200 公斤" → 中载，板厚加厚 20%（10mm），纵梁加厚 20%
+- 用户说"承载 800 公斤" → 重载，板厚加厚 40%（11mm），纵梁加厚 40%
+- 用户没说轮子大小 → 用默认值 100mm
+- 轴距 = 长度 × 0.75（除非用户指定）
+- 轮距 = 宽度 × 0.8（除非用户指定）
 
 ## 参数说明
 
@@ -46,7 +109,9 @@ description: AGV底盘参数化建模 (CadQuery)，从自然语言需求生成AG
 
 ## 工具与路径
 
-
+```bash
+python scripts/agv_chassis.py [--params JSON_FILE] [--output DIR]
+```
 
 ## 默认约定
 

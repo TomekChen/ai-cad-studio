@@ -173,6 +173,31 @@ const middlewares = [
     },
   }),
   ...(localAssetBackendEnabled ? [createLocalAssetMiddleware({ backend })] : []),
+  // Docs static file serving
+  (req, res, next) => {
+    console.log('Docs middleware called, req.url:', req.url);
+    if (req.url && req.url.startsWith('/docs/')) {
+      const docsRoot = path.resolve(viewerAppRoot, '..', '..', 'docs');
+      console.log('docsRoot:', docsRoot);
+      const filePath = path.join(docsRoot, decodeURIComponent(req.url.slice(6)));
+      console.log('filePath:', filePath, 'exists:', fs.existsSync(filePath));
+      if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
+        const ext = path.extname(filePath).toLowerCase();
+        const contentTypes = {
+          '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+          '.html': 'text/html; charset=utf-8',
+          '.md': 'text/markdown; charset=utf-8',
+          '.pdf': 'application/pdf',
+        };
+        res.statusCode = 200;
+        res.setHeader('content-type', contentTypes[ext] || 'application/octet-stream');
+        res.setHeader('access-control-allow-origin', '*');
+        fs.createReadStream(filePath).pipe(res);
+        return;
+      }
+    }
+    next();
+  },
   serveDistAsset({ distRoot }),
 ];
 
